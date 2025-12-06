@@ -1,0 +1,17 @@
+# 1. Créer la clé privée de la CA
+openssl genrsa -out myCA-key.pem 2048
+
+# 2. Créer le certificat auto-signé de la CA
+openssl req -x509 -new -key myCA-key.pem -out myCA.pem -subj "//CN=MyRootCA" -days 3650
+
+# 1. Clé privée client (déjà fait)
+openssl genrsa -out client2-key.pem 2048
+
+# 2. CSR (déjà fait)
+openssl req -new -key client2-key.pem -out client2.csr -subj "//CN=client2"
+
+# 3. Signer le certificat client (MAINTENANT ça va marcher)
+openssl x509 -req -in client2.csr -CA myCA.pem -CAkey myCA-key.pem -CAcreateserial -out client2-cert.pem -days 365 -sha256
+
+# 4. Créer le keystore P12
+openssl pkcs12 -export -in client2-cert.pem -inkey client2-key.pem -out client2-keystore.p12 -name client2 -password pass:client2pass

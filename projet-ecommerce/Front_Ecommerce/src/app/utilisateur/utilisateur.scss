@@ -1,0 +1,20 @@
+// admin-users.component.scss
+.container {
+  max-width: 1200px;
+}
+
+table {
+  min-width: 800px;
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .flex {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}

@@ -1,0 +1,9 @@
+// product-comments.component.scss
+.star-rating {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.star-rating:hover {
+  color: #fbbf24;
+}

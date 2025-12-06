@@ -1,0 +1,8 @@
+# Test produits
+curl.exe -vk https://localhost:8443/api/produits
+
+# Test categories  
+curl.exe -vk https://localhost:8443/api/categories
+
+# Test auth (pour voir la structure de login)
+curl.exe -vk https://localhost:8443/api/auth/login

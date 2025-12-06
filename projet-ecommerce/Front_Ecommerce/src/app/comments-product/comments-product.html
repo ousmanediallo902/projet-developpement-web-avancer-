@@ -1,0 +1,175 @@
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+  <!-- Bouton retour -->
+  <button (click)="router.navigate(['/admin/produits'])" class="flex items-center text-sky-600 hover:text-sky-700 mb-6">
+    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+    Retour aux produits
+  </button>
+
+  <!-- Messages d'alerte -->
+  <div class="space-y-4 mb-8">
+    @if (errorMessage) {
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+      {{ errorMessage }}
+    </div>
+    }
+    @if (successMessage) {
+    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+      {{ successMessage }}
+    </div>
+    }
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading) {
+  <div class="flex justify-center items-center py-12">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
+  </div>
+  }
+
+  <!-- Contenu principal -->
+  @if (!isLoading && product) {
+  <!-- En-tête du produit -->
+  <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <div class="flex flex-col md:flex-row gap-6">
+      <!-- Image du produit -->
+      <div class="flex-shrink-0">
+        @if (product.imageUrl) {
+        <img [src]="'https://localhost:8443' + product.imageUrl" [alt]="product.nom"
+          class="w-48 h-48 object-cover rounded-lg" />
+
+        } @else {
+        <div class="w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center">
+          <span class="text-gray-400">Aucune image</span>
+        </div>
+        }
+      </div>
+
+      <!-- Informations du produit -->
+      <div class="flex-grow">
+        <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ product.nom }}</h1>
+        <p class="text-gray-600 mb-4">{{ product.description }}</p>
+
+        <div class="flex items-center justify-between">
+          <span class="text-3xl font-bold text-sky-600">
+            {{ product.prix | currency:'XOF':'symbol':'1.0-0' }}
+          </span>
+
+          <!-- Note moyenne -->
+          @if (commentaires.length > 0) {
+          <div class="text-right">
+            <div class="text-2xl font-bold text-yellow-500">
+              {{ calculerNoteMoyenne() }}/5
+            </div>
+            <div class="text-sm text-gray-500">
+              {{ commentaires.length }} avis
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulaire d'ajout de commentaire -->
+  <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <h2 class="text-xl font-semibold text-gray-800 mb-4">Ajouter un commentaire</h2>
+
+    <form (ngSubmit)="ajouterCommentaire()" class="space-y-4">
+      <!-- Notation par étoiles -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Note</label>
+        <div class="flex space-x-1" (mouseleave)="resetStars()">
+          @for (star of [1,2,3,4,5]; track star) {
+          <button type="button" (click)="setRating(star)" (mouseenter)="hoverStar(star)"
+            class="text-2xl focus:outline-none">
+            @if (star <= (hoverRating || userRating)) { <span class="text-yellow-400">★</span>
+              } @else {
+              <span class="text-gray-300">☆</span>
+              }
+          </button>
+          }
+        </div>
+        <div class="text-sm text-gray-500 mt-1">
+          {{ userRating }}/5 étoiles
+        </div>
+      </div>
+
+      <!-- Commentaire -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Votre commentaire</label>
+        <textarea [(ngModel)]="nouveauCommentaire.contenu" name="contenu" rows="4"
+          placeholder="Partagez votre expérience avec ce produit..."
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"></textarea>
+      </div>
+
+      <!-- Bouton de soumission -->
+      <button type="submit" [disabled]="isSubmitting || !nouveauCommentaire.contenu.trim()"
+        class="bg-sky-600 hover:bg-sky-700 text-white px-6 py-2 rounded-md disabled:opacity-50">
+        @if (isSubmitting) {
+        <span>Publication...</span>
+        } @else {
+        <span>Publier le commentaire</span>
+        }
+      </button>
+    </form>
+  </div>
+
+  <!-- Liste des commentaires -->
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h2 class="text-xl font-semibold text-gray-800 mb-4">
+      Commentaires ({{ commentaires.length }})
+    </h2>
+
+    @if (commentaires.length === 0) {
+    <div class="text-center py-8">
+      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+      </svg>
+      <p class="mt-2 text-gray-500">Aucun commentaire pour ce produit.</p>
+      <p class="text-sm text-gray-400">Soyez le premier à donner votre avis !</p>
+    </div>
+    } @else {
+    <div class="space-y-6">
+      @for (commentaire of commentaires; track commentaire.id) {
+      <div class="border-b border-gray-200 pb-6 last:border-b-0">
+        <!-- En-tête du commentaire -->
+        <div class="flex items-start justify-between mb-3">
+          <div>
+            <h4 class="font-semibold text-gray-900">{{ commentaire.userNom }}</h4>
+            <p class="text-sm text-gray-500">{{ commentaire.dateCommentaire | date:'dd/MM/yyyy HH:mm' }}</p>
+          </div>
+
+          <!-- Note -->
+          <div class="flex items-center">
+            <div class="flex mr-2">
+              @for (star of getStarsArray(commentaire.note); track $index) {
+              @if (star) {
+              <span class="text-yellow-400">★</span>
+              } @else {
+              <span class="text-gray-300">☆</span>
+              }
+              }
+            </div>
+            <span class="text-lg font-bold text-yellow-600">{{ commentaire.note }}/5</span>
+          </div>
+        </div>
+
+        <!-- Contenu du commentaire -->
+        <p class="text-gray-700 mb-4">{{ commentaire.contenu }}</p>
+
+        <!-- Bouton de suppression -->
+        @if (peutSupprimerCommentaire(commentaire)) {
+        <button (click)="supprimerCommentaire(commentaire.id)" class="text-red-600 hover:text-red-800 text-sm">
+          Supprimer
+        </button>
+        }
+      </div>
+      }
+    </div>
+    }
+  </div>
+  }
+</div>
